@@ -1,0 +1,824 @@
+/* =========================================================================
+   styles.css — 艾布拉姆斯型号演进
+   13 色全部来自素材，界面其余部分只用同色系的明度/透明度变化。
+   版式：左侧编辑栏（品牌 / 简介 / 与前型相比）+ 右侧舞台；底部时间轴。
+   交互：标注只在悬停部件时出现，用 CSS 类驱动，JS 只切类。
+   ========================================================================= */
+
+:root {
+  /* —— 13 色素材色板（深灰绿 → 浅灰绿，单色梯度） —— */
+  --c1:  #252d2a;  /* 只做描边（界面里当墨色用） */
+  --c2:  #303c35;
+  --c3:  #343c37;
+  --c4:  #56654e;
+  --c5:  #64735b;
+  --c6:  #68716a;
+  --c7:  #748367;
+  --c8:  #77836c;
+  --c9:  #8a967a;
+  --c10: #8e9b7d;
+  --c11: #929e82;
+  --c12: #a1ac91;
+  --c13: #b1b99f;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --page: var(--c1);
+  --text: var(--c13);
+  --muted: var(--c12);
+  --faint: var(--c9);
+  --hair: color-mix(in srgb, var(--c13) 20%, transparent);
+  --plate: color-mix(in srgb, var(--c13) 26%, #ffffff);
+
+  --rail: clamp(240px, 20vw, 340px);
+  --page-max: 1880px;
+
+  --font-sans: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { height: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- 背景照片 */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--page);
+  pointer-events: none;
+}
+
+.backdrop-layer {
+  position: absolute;
+  inset: -6%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* 磨砂：模糊在离线阶段就做掉了（见 tools/make_blur.py），运行时只压暗与降饱和 */
+  filter: saturate(0.85) brightness(0.82);
+  opacity: 0;
+  transition: opacity 420ms var(--ease);
+}
+
+.backdrop-layer.is-shown { opacity: 1; }
+
+/* 纯照片模式的那一层：清晰的原始照片，不压暗、不加暗角 */
+.backdrop--sharp { background: transparent; }
+
+.backdrop--sharp::after { content: none; }
+
+.backdrop-layer--sharp {
+  filter: none;
+}
+
+/* 压一层暗角，保证左栏文字和白框边缘的对比度 */
+.backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c1) 26%, transparent) 0%,
+      transparent 24%,
+      transparent 74%,
+      color-mix(in srgb, var(--c1) 38%, transparent) 100%
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--c1) 52%, transparent) 0%,
+      color-mix(in srgb, var(--c1) 30%, transparent) 42%,
+      color-mix(in srgb, var(--c1) 18%, transparent) 100%
+    );
+}
+
+/* ---------------------------------------------------------------- dump 页面 */
+
+body.dump {
+  display: block;
+  overflow: auto;
+  padding: 28px;
+  background: #1b2320;
+  color: var(--c13);
+}
+
+body.dump pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: 13px/1.65 var(--font-mono);
+  color: var(--c13);
+}
+
+/* ---------------------------------------------------------------- 纯照片模式 */
+
+.brand-text,
+.brief,
+.delta,
+.stage-column,
+.timeline,
+.colophon {
+  transition: opacity 420ms var(--ease), visibility 420ms;
+}
+
+body.is-photo .brand-text,
+body.is-photo .brief,
+body.is-photo .delta,
+body.is-photo .stage-column,
+body.is-photo .timeline,
+body.is-photo .colophon {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- 版面 */
+
+.layout {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: 28px;
+  padding: 16px 24px 8px;
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------------- 左栏 */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding-right: 4px;
+}
+
+.brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand-text { min-width: 0; }
+
+/* 军牌样式的开关：标题右侧，左栏内，不会压到白框 */
+.plaque {
+  flex: 0 0 auto;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px 6px;
+  border: 1px solid color-mix(in srgb, var(--c13) 46%, transparent);
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--c11) 34%, transparent),
+      color-mix(in srgb, var(--c2) 72%, transparent));
+  color: var(--c13);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 2px 6px -3px rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  transition: transform 120ms var(--ease), filter 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+/* 四角铆钉 */
+.plaque::before,
+.plaque::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c13) 42%, transparent);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.5);
+}
+.plaque::before { left: 3px; }
+.plaque::after { right: 3px; }
+
+.plaque:hover {
+  filter: brightness(1.12);
+  border-color: color-mix(in srgb, var(--c13) 68%, transparent);
+}
+
+.plaque:active { transform: translateY(1px); }
+
+.plaque:focus-visible {
+  outline: 2px solid var(--c13);
+  outline-offset: 2px;
+}
+
+.plaque-led {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c12);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--c12) 70%, transparent);
+  transition: opacity 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+
+.plaque[aria-pressed="false"] {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--c6) 26%, transparent),
+      color-mix(in srgb, var(--c2) 62%, transparent));
+  color: color-mix(in srgb, var(--c13) 72%, transparent);
+}
+
+.plaque[aria-pressed="false"] .plaque-led {
+  opacity: 0.25;
+  box-shadow: none;
+}
+
+.plaque-text { white-space: nowrap; }
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(15px, 1.25vw, 21px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--c13);
+  line-height: 1.35;
+}
+
+.brand { flex: 0 0 auto; }
+
+.brief {
+  margin: 26px 0 14px;
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.model-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta-year {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+}
+
+.meta-name {
+  font-size: clamp(26px, 2.2vw, 36px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: var(--c13);
+}
+
+.meta-note {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.rail-label {
+  margin: 20px 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+}
+
+.brief-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.72;
+  color: var(--muted);
+  /* 写不下时在自己的框里向下滚，绝不顶到「与前型相比」 */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 8px;
+}
+
+/* 显式画一条 8px 的竖向滚动条，别指望系统默认样式可见 */
+.brief-text::-webkit-scrollbar { width: 8px; }
+.brief-text::-webkit-scrollbar-track { background: transparent; }
+.brief-text::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--c13) 38%, transparent);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.brief-text::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--c13) 58%, transparent);
+  background-clip: padding-box;
+}
+
+.delta {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--hair);
+}
+
+.delta .rail-label { margin-top: 0; }
+
+.delta-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.delta-list li {
+  position: relative;
+  padding-left: 15px;
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--muted);
+}
+
+.delta-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 7px;
+  height: 1px;
+  background: var(--c9);
+}
+
+/* ---------------------------------------------------------------- 舞台 */
+
+.stage-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.stage-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+.stage-frame {
+  position: relative;
+  width: min(100%, 1520px);
+  aspect-ratio: 1681 / 886;
+  background: color-mix(in srgb, var(--plate) 88%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in srgb, var(--c1) 34%, transparent);
+  border-radius: 5px;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ------------------------------------------------- 车辆动画层（CSS opacity）
+   配准写在内层 registration 的 transform 属性上，永不在同一元素上混用。
+   呈现属性只挂在 .vehicle 上，不碰 defs 里的 art。 */
+
+.vehicle { opacity: 0; visibility: hidden; }
+.vehicle.is-shown { opacity: 1; visibility: visible; }
+.vehicle.is-entering {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 360ms var(--ease) 60ms;
+}
+.vehicle.is-leaving {
+  opacity: 0;
+  visibility: visible;
+  pointer-events: none;
+  transition: opacity 360ms var(--ease) 60ms;
+}
+
+/* ------------------------------------------------- 可悬停部件 */
+
+.hotspot { pointer-events: none; cursor: crosshair; }
+
+.hit-shape {
+  fill: var(--c1);
+  fill-opacity: 0;
+  stroke: var(--c1);
+  stroke-opacity: 0;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  pointer-events: all;
+  transition: fill-opacity 140ms var(--ease), stroke-opacity 140ms var(--ease);
+}
+
+.hotspot:focus { outline: none; }
+
+.hotspot:focus-visible .hit-shape {
+  fill-opacity: 0.16;
+  stroke-opacity: 0.7;
+}
+
+.hotspot.is-open .hit-shape {
+  fill-opacity: 0.15;
+  stroke-opacity: 0.55;
+}
+
+/* pointer-events:all 会无视 visibility，隐藏车型的命中层必须显式关掉 */
+.vehicle:not(.is-shown) .hit-shape { pointer-events: none; }
+
+.hit-zone { stroke-dasharray: 6 5; }
+.hotspot.is-open .hit-zone { fill-opacity: 0.06; }
+
+/* ---------------------------------------------------------------- 引线 */
+
+.leader-layer { visibility: hidden; }
+.leader-layer.is-shown,
+.leader-layer.is-entering,
+.leader-layer.is-leaving { visibility: visible; }
+
+.part-leader {
+  fill: none;
+  stroke: var(--c1);
+  stroke-width: 1;
+  stroke-opacity: 0;
+  vector-effect: non-scaling-stroke;
+  transition: stroke-opacity 160ms var(--ease);
+}
+.part-leader.is-open { stroke-opacity: 0.62; }
+
+.part-dot {
+  fill: var(--c1);
+  fill-opacity: 0;
+  transition: fill-opacity 160ms var(--ease);
+}
+.part-dot.is-open { fill-opacity: 0.92; }
+
+/* ---------------------------------------------------------------- 数据卡 */
+
+.labels-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.label-layer { visibility: hidden; }
+.label-layer.is-shown,
+.label-layer.is-entering,
+.label-layer.is-leaving { visibility: visible; }
+
+.part-card {
+  position: absolute;
+  /* max-content：否则 left 百分比会把可用宽度卡住，长行被提前折行 */
+  width: max-content;
+  transform: translateX(-50%) translateY(3px);
+  min-width: 118px;
+  max-width: min(320px, 40cqw);
+  padding: 4px 8px 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, #ffffff 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c1) 26%, transparent);
+  box-shadow: 0 8px 20px -12px rgba(0, 0, 0, 0.65);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 150ms var(--ease), transform 150ms var(--ease);
+  font-size: clamp(11px, 0.95cqw, 13px);
+  line-height: 1.3;
+  color: var(--c1);
+}
+
+.part-card.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.part-card-title {
+  margin: 0 0 2px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.part-name {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.part-tag {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--c4);
+}
+
+.part-rows {
+  margin: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.part-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.part-row dt {
+  flex: 0 0 auto;
+  min-width: 3.2em;
+  color: var(--c5);
+}
+
+.part-row dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  color: var(--c2);
+}
+
+/* ---------------------------------------------------------------- 时间轴 */
+
+.timeline {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  border-top: 1px solid var(--hair);
+  /* 型号多了之后靠横向滚动，不换行，免得把舞台挤矮 */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  padding: 12px 24px 10px;
+}
+
+.timeline::-webkit-scrollbar { height: 8px; }
+.timeline::-webkit-scrollbar-track { background: transparent; }
+.timeline::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--c13) 26%, transparent);
+  border-radius: 4px;
+}
+.timeline::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--c13) 45%, transparent);
+}
+
+.timeline-track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  list-style: none;
+  width: max-content;
+  margin: 0 auto;
+  padding: 0;
+  max-width: none;
+}
+
+.milestone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px 7px 7px;
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--c13) 4%, transparent);
+  transition: background-color 200ms var(--ease), border-color 200ms var(--ease), color 200ms var(--ease);
+}
+
+.milestone:hover {
+  background: color-mix(in srgb, var(--c13) 10%, transparent);
+  border-color: color-mix(in srgb, var(--c13) 34%, transparent);
+}
+
+.milestone[aria-current="page"] {
+  background: color-mix(in srgb, var(--c13) 14%, transparent);
+  border-color: var(--c9);
+  color: var(--c13);
+}
+
+.milestone:focus-visible {
+  outline: 2px solid var(--c13);
+  outline-offset: 2px;
+}
+
+.thumb {
+  display: block;
+  width: 160px;
+  height: 62px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--plate);
+}
+
+.thumb svg { display: block; width: 100%; height: 100%; }
+
+.milestone-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.15;
+}
+
+.milestone-year {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+}
+
+.milestone-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.milestone[aria-current="page"] .milestone-year { color: var(--c11); }
+
+/* ---------------------------------------------------------------- 页脚 */
+
+.colophon {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  justify-content: space-between;
+  max-width: var(--page-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px 12px;
+  font-size: 11px;
+  color: var(--c9);
+}
+
+/* ---------------------------------------------------------------- 度量容器 */
+
+.measure-host {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- Debug */
+
+html:not([data-debug="1"]) #debug-layer { display: none; }
+
+.debug-badge {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  margin: 0;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--c1);
+  background: color-mix(in srgb, #ffffff 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c1) 22%, transparent);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.dbg-grid {
+  fill: none;
+  stroke: color-mix(in srgb, var(--c1) 12%, transparent);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.dbg-bounds {
+  fill: none;
+  stroke: color-mix(in srgb, var(--c1) 40%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 8 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.dbg-rail {
+  fill: none;
+  stroke: var(--c4);
+  stroke-opacity: 0.85;
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.dbg-bbox {
+  fill: none;
+  stroke: var(--c9);
+  stroke-width: 1;
+  stroke-dasharray: 5 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.dbg-anchor {
+  fill: none;
+  stroke: var(--c1);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.dbg-zone {
+  fill: none;
+  stroke: var(--c4);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.dbg-variant[data-active="false"] { display: none; }
+
+/* ---------------------------------------------------------------- 减少动效 */
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-text,
+  .brief,
+  .delta,
+  .stage-column,
+  .timeline,
+  .colophon,
+  .backdrop-layer,
+  .vehicle,
+  .hit-shape,
+  .part-leader,
+  .part-dot,
+  .part-card,
+  .milestone { transition: none !important; }
+}
+
+/* ---------------------------------------------------------------- 窄屏 */
+
+/* 窄屏：标题和牌匾挤在一行会换行，牌匾收小一点让标题保持单行 */
+@media (max-width: 1150px) and (min-width: 901px) {
+  .brand { gap: 8px; }
+  h1 { font-size: 15px; letter-spacing: 0.02em; }
+  .plaque { font-size: 11px; padding: 6px 8px 5px; letter-spacing: 0.08em; gap: 5px; }
+}
+
+@media (max-width: 900px) {
+  body { overflow: auto; height: auto; min-height: 100vh; }
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 14px 16px 8px; }
+  .rail { overflow: visible; order: 2; }
+  .stage-column { order: 1; }
+  .delta { margin-top: 18px; }
+  .timeline-track { gap: 8px; }
+  .thumb { width: 120px; height: 46px; }
+}

@@ -1,0 +1,381 @@
+{
+  "base": "http://127.0.0.1:8001/",
+  "shots": [
+    {
+      "variant": "m1",
+      "kind": "default",
+      "file": "m1-default.jpg"
+    },
+    {
+      "variant": "m1",
+      "kind": "photo",
+      "file": "m1-photo.jpg"
+    },
+    {
+      "variant": "m1",
+      "kind": "part",
+      "part": "gun",
+      "file": "m1-part-gun.jpg"
+    },
+    {
+      "variant": "m1",
+      "kind": "part",
+      "part": "turret",
+      "file": "m1-part-turret.jpg"
+    },
+    {
+      "variant": "m1",
+      "kind": "part",
+      "part": "cupola",
+      "file": "m1-part-cupola.jpg"
+    },
+    {
+      "variant": "m1",
+      "kind": "part",
+      "part": "hull",
+      "file": "m1-part-hull.jpg"
+    },
+    {
+      "variant": "m1",
+      "kind": "part",
+      "part": "engine",
+      "file": "m1-part-engine.jpg"
+    },
+    {
+      "variant": "m1",
+      "kind": "part",
+      "part": "suspension",
+      "file": "m1-part-suspension.jpg"
+    },
+    {
+      "variant": "m1",
+      "kind": "part",
+      "part": "track",
+      "file": "m1-part-track.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "default",
+      "file": "ipm1-default.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "photo",
+      "file": "ipm1-photo.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "part",
+      "part": "gun",
+      "file": "ipm1-part-gun.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "part",
+      "part": "turret",
+      "file": "ipm1-part-turret.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "part",
+      "part": "cupola",
+      "file": "ipm1-part-cupola.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "part",
+      "part": "hull",
+      "file": "ipm1-part-hull.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "part",
+      "part": "engine",
+      "file": "ipm1-part-engine.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "part",
+      "part": "suspension",
+      "file": "ipm1-part-suspension.jpg"
+    },
+    {
+      "variant": "ipm1",
+      "kind": "part",
+      "part": "track",
+      "file": "ipm1-part-track.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "default",
+      "file": "m1a1-default.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "photo",
+      "file": "m1a1-photo.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "part",
+      "part": "gun",
+      "file": "m1a1-part-gun.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "part",
+      "part": "turret",
+      "file": "m1a1-part-turret.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "part",
+      "part": "cupola",
+      "file": "m1a1-part-cupola.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "part",
+      "part": "hull",
+      "file": "m1a1-part-hull.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "part",
+      "part": "engine",
+      "file": "m1a1-part-engine.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "part",
+      "part": "suspension",
+      "file": "m1a1-part-suspension.jpg"
+    },
+    {
+      "variant": "m1a1",
+      "kind": "part",
+      "part": "track",
+      "file": "m1a1-part-track.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "default",
+      "file": "m1a2-default.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "photo",
+      "file": "m1a2-photo.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "part",
+      "part": "gun",
+      "file": "m1a2-part-gun.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "part",
+      "part": "turret",
+      "file": "m1a2-part-turret.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "part",
+      "part": "cupola",
+      "file": "m1a2-part-cupola.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "part",
+      "part": "hull",
+      "file": "m1a2-part-hull.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "part",
+      "part": "engine",
+      "file": "m1a2-part-engine.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "part",
+      "part": "suspension",
+      "file": "m1a2-part-suspension.jpg"
+    },
+    {
+      "variant": "m1a2",
+      "kind": "part",
+      "part": "track",
+      "file": "m1a2-part-track.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "default",
+      "file": "m1a2sep-default.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "photo",
+      "file": "m1a2sep-photo.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "part",
+      "part": "gun",
+      "file": "m1a2sep-part-gun.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "part",
+      "part": "turret",
+      "file": "m1a2sep-part-turret.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "part",
+      "part": "cupola",
+      "file": "m1a2sep-part-cupola.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "part",
+      "part": "hull",
+      "file": "m1a2sep-part-hull.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "part",
+      "part": "engine",
+      "file": "m1a2sep-part-engine.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "part",
+      "part": "suspension",
+      "file": "m1a2sep-part-suspension.jpg"
+    },
+    {
+      "variant": "m1a2sep",
+      "kind": "part",
+      "part": "track",
+      "file": "m1a2sep-part-track.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "default",
+      "file": "m1a2sepv2-default.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "photo",
+      "file": "m1a2sepv2-photo.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "gun",
+      "file": "m1a2sepv2-part-gun.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "turret",
+      "file": "m1a2sepv2-part-turret.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "cupola",
+      "file": "m1a2sepv2-part-cupola.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "hull",
+      "file": "m1a2sepv2-part-hull.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "engine",
+      "file": "m1a2sepv2-part-engine.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "suspension",
+      "file": "m1a2sepv2-part-suspension.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "track",
+      "file": "m1a2sepv2-part-track.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "era",
+      "file": "m1a2sepv2-part-era.jpg"
+    },
+    {
+      "variant": "m1a2sepv2",
+      "kind": "part",
+      "part": "rws",
+      "file": "m1a2sepv2-part-rws.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "default",
+      "file": "m1a2sepv3-default.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "photo",
+      "file": "m1a2sepv3-photo.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "part",
+      "part": "gun",
+      "file": "m1a2sepv3-part-gun.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "part",
+      "part": "turret",
+      "file": "m1a2sepv3-part-turret.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "part",
+      "part": "cupola",
+      "file": "m1a2sepv3-part-cupola.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "part",
+      "part": "hull",
+      "file": "m1a2sepv3-part-hull.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "part",
+      "part": "engine",
+      "file": "m1a2sepv3-part-engine.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "part",
+      "part": "suspension",
+      "file": "m1a2sepv3-part-suspension.jpg"
+    },
+    {
+      "variant": "m1a2sepv3",
+      "kind": "part",
+      "part": "track",
+      "file": "m1a2sepv3-part-track.jpg"
+    }
+  ]
+}

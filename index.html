@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN" data-variant="m1">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>艾布拉姆斯型号演进 · 侧视对照</title>
+  <meta name="description" content="M1 系列七型号侧视图对照，悬停部件查看数据，底部年份时间轴。">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#252d2a">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+  <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+  <div class="backdrop backdrop--sharp" id="backdrop-sharp" aria-hidden="true"></div>
+
+  <main class="layout">
+
+    <aside class="rail">
+      <header class="brand">
+        <div class="brand-text">
+          <p class="eyebrow">ABRAMS · 侧视对照</p>
+          <h1>艾布拉姆斯型号演进</h1>
+        </div>
+        <button class="plaque" id="photo-toggle" type="button" aria-pressed="false" aria-label="切换实物背景图">
+          <span class="plaque-led" aria-hidden="true"></span>
+          <span class="plaque-text">真实图片</span>
+        </button>
+      </header>
+
+      <section class="brief" aria-labelledby="brief-title">
+        <div class="model-meta">
+          <span class="meta-year" id="meta-year">1980</span>
+          <span class="meta-name" id="meta-name">M1</span>
+        </div>
+        <p class="meta-note" id="meta-note">M68A1 105 mm 线膛炮</p>
+        <h2 class="rail-label" id="brief-title">简介</h2>
+        <p class="brief-text" id="brief-text"></p>
+      </section>
+
+      <section class="delta" aria-labelledby="delta-title">
+        <h2 class="rail-label" id="delta-title">与前型相比</h2>
+        <ul class="delta-list" id="delta-list"></ul>
+      </section>
+    </aside>
+
+    <section class="stage-column">
+      <div class="stage-wrap">
+        <div class="stage-frame" id="stage-frame">
+          <svg class="stage" id="stage-svg" viewBox="0 -140 1681 886"
+               preserveAspectRatio="xMidYMid meet" role="img"
+               aria-labelledby="stage-title stage-desc">
+            <title id="stage-title">艾布拉姆斯型号侧视对照</title>
+            <desc id="stage-desc">M1 系列各型号的侧视矢量图。鼠标悬停在部件上可查看该部件的型号与参数。</desc>
+            <defs id="art-defs"></defs>
+            <g id="vehicles"></g>
+            <g id="leaders"></g>
+            <g id="debug-layer" aria-hidden="true"></g>
+          </svg>
+          <div class="labels-layer" id="labels-layer" aria-hidden="true"></div>
+          <p class="debug-badge" id="debug-badge" hidden>DEBUG · 网格与配准基准线 · x=287 / x=1080.8</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="timeline" id="timeline" aria-label="型号时间轴">
+    <ol class="timeline-track" id="timeline-track"></ol>
+  </nav>
+
+  <footer class="colophon">
+    <span>悬停部件查看数据</span>
+    <span>← → Home End 切换型号</span>
+    <span id="route-list">#/m1 · #/ipm1 · #/m1a1</span>
+    <span>python -m http.server 打开（file:// 不支持 ES Modules）</span>
+  </footer>
+
+  <svg id="measure" class="measure-host" aria-hidden="true" focusable="false"></svg>
+
+</body>
+</html>
