@@ -82,14 +82,14 @@ const TURRET_MODULES = Array.from({ length: 7 }, (_, i) => `turret_module_0${i +
 /** M1A2 系列的七部件；差异项通过 extra 覆盖 */
 function a2Parts(extra = {}) {
   return [
-    gunPart('M256', [['口径', '120 mm · 滑膛 · L/44'], ['弹药', 'M829 / M830 / M865']], 8),
+    gunPart('M256', [['口径', '120 mm · 滑膛 · L/44'], ['弹药', extra.ammo || 'M829 / M830 / M865']], 8),
     {
       key: 'turret',
       name: '炮塔装甲',
       tag: '复合装甲',
       band: 'top',
       hits: extra.turretHits || ['turret'],
-      rows: extra.turretRows || [['结构', '改进型复合装甲'], ['防护', '等效厚度未公开']],
+      rows: extra.turretRows || [['结构', '改进型复合装甲'], ['防护', '正面 ≈ 600 mm KE / 900 mm HEAT（出口型评估）']],
     },
     {
       key: 'cupola',
@@ -105,7 +105,7 @@ function a2Parts(extra = {}) {
       tag: '复合装甲',
       band: 'bottom',
       hits: extra.hullHits || ['hull', 'side-skirt-face'],
-      rows: extra.hullRows || [['首上', '大倾角复合装甲'], ['防护', '等效厚度未公开']],
+      rows: extra.hullRows || [['首上', '大倾角复合装甲'], ['防护', '≈ 350 mm KE / 750 mm HEAT（公开评估）']],
     },
     {
       key: 'engine',
@@ -121,7 +121,7 @@ function a2Parts(extra = {}) {
       tag: '扭杆',
       band: 'bottom',
       hits: WHEELS,
-      rows: [['负重轮', '每侧 7 个'], ['减振', '改进型减振器']],
+      rows: extra.suspRows || [['负重轮', '每侧 7 个'], ['减振', '改进型减振器']],
     },
     {
       key: 'track',
@@ -163,7 +163,7 @@ export const VARIANTS = Object.freeze({
         tag: '复合装甲',
         band: 'top',
         hits: ['turret'],
-        rows: [['结构', 'Burlington 复合装甲'], ['防护', '等效厚度未公开']],
+        rows: [['结构', 'Burlington 复合装甲'], ['防护', '正面 ≈ 400 mm KE / 750 mm HEAT（公开评估）']],
       },
       {
         key: 'cupola',
@@ -179,7 +179,7 @@ export const VARIANTS = Object.freeze({
         tag: '复合装甲',
         band: 'bottom',
         hits: ['hull', 'side-skirt-continuous-face', 'side-skirt-face'],
-        rows: [['首上', '大倾角复合装甲'], ['防护', '等效厚度未公开']],
+        rows: [['首上', '大倾角复合装甲'], ['防护', '≈ 350 mm KE / 750 mm HEAT（公开评估）']],
       },
       {
         key: 'engine',
@@ -236,7 +236,7 @@ export const VARIANTS = Object.freeze({
         tag: '改进型',
         band: 'top',
         hits: ['turret'],
-        rows: [['方案', 'Block I 改进装甲 · 与 M1A1 同源'], ['防护', '等效厚度未公开']],
+        rows: [['方案', 'Block I 改进装甲 · 与 M1A1 同源'], ['防护', '正面 > 400 mm KE（公开评估）']],
       },
       {
         key: 'cupola',
@@ -252,7 +252,7 @@ export const VARIANTS = Object.freeze({
         tag: '复合装甲',
         band: 'bottom',
         hits: ['hull', 'side-skirt-continuous-face', 'side-skirt-face'],
-        rows: [['首上', '大倾角复合装甲'], ['防护', '等效厚度未公开']],
+        rows: [['首上', '大倾角复合装甲'], ['防护', '≈ 350 mm KE / 750 mm HEAT（公开评估）']],
       },
       {
         key: 'engine',
@@ -309,7 +309,7 @@ export const VARIANTS = Object.freeze({
         tag: '复合装甲',
         band: 'top',
         hits: ['turret'],
-        rows: [['正面', 'Block I 改进装甲 · 与 IPM1 同源'], ['防护', '等效厚度未公开']],
+        rows: [['正面', 'Block I 改进装甲 · 与 IPM1 同源'], ['防护', '正面 ≈ 600 mm KE / 700 mm HEAT（公开评估）']],
       },
       {
         key: 'cupola',
@@ -325,7 +325,7 @@ export const VARIANTS = Object.freeze({
         tag: '复合装甲',
         band: 'bottom',
         hits: ['hull', 'side-skirt-continuous-face', 'side-skirt-face'],
-        rows: [['首上', '大倾角复合装甲'], ['防护', '等效厚度未公开']],
+        rows: [['首上', '大倾角复合装甲'], ['防护', '≈ 350 mm KE / 750 mm HEAT（公开评估）']],
       },
       {
         key: 'engine',
@@ -356,7 +356,7 @@ export const VARIANTS = Object.freeze({
   m1a2: {
     id: 'm1a2',
     name: 'M1A2',
-    year: 1990,
+    year: 1992,
     navOrder: 3,
     file: 'assets/m1a2_vector_smooth.svg',
     prefix: 'm1a2',
@@ -367,13 +367,13 @@ export const VARIANTS = Object.freeze({
     photo: 'assets/photos/m1a2-blur.jpg',
     photoSharp: 'assets/photos/m1a2.jpg',
     brief:
-      '1990 年 4 月，M1A2 获批低速初始生产 62 辆，1992 年末开始交付。它把 M1A1 的火力原样保留，重点放在感知与协同：车长独立热像仪让车长拥有独立的观瞄通道，可以一边搜索、一边由炮长接战；车际信息系统把位置、敌情与命令送进车组，让坦克成为数字战场上的一个节点。火控与导航同步升级，火炮仍是 M256 120 mm 滑膛炮。',
+      '1990 年 4 月，M1A2 的生产计划因预算削减被压缩；1991 年 9 月，62 辆低速初始生产的决定权下放给陆军，1992 年 5 月合约变更，年末首批交付。它把 M1A1 的火力原样保留，重点放在感知与协同：车长独立热像仪让车长拥有独立的观瞄通道，可以一边搜索、一边由炮长接战；车际信息系统把位置、敌情与命令送进车组。火控与导航同步升级，火炮仍是 M256 120 mm 滑膛炮。',
     delta: [
       '相对 M1A1：车长独立热像仪，车长可独立搜索。',
       '相对 M1A1：车际信息系统与数字战场接入。',
       '火力不变：M256 120 mm 滑膛炮。',
     ],
-    parts: a2Parts(),
+    parts: a2Parts({ ammo: 'M829A1 / M830 / M865' }),
   },
 
   m1a2sep: {
@@ -397,6 +397,8 @@ export const VARIANTS = Object.freeze({
       '火力不变：M256 120 mm 滑膛炮。',
     ],
     parts: a2Parts({
+      ammo: 'M829A2 / M830A1 / M865',
+      turretRows: [['结构', '复合装甲 + SEP 批次改进'], ['防护', '正面 ≈ 940–960 mm KE（公开评估）']],
       turretHits: ['turret', ...SEP_PANEL],
     }),
   },
@@ -422,7 +424,11 @@ export const VARIANTS = Object.freeze({
       '火力不变：M256 120 mm 滑膛炮。',
     ],
     parts: [
-      ...a2Parts(),
+      ...a2Parts({
+        ammo: 'M829A3 / M830A1 / M865',
+        turretRows: [['结构', '复合装甲 + 炮塔顶部武器站'], ['防护', '正面 ≥ 940 mm KE（公开评估）']],
+        suspRows: [['负重轮', '每侧 7 个'], ['减振', '传动与悬挂同批改进']],
+      }),
       {
         key: 'era',
         name: '爆炸反应装甲',
@@ -465,13 +471,16 @@ export const VARIANTS = Object.freeze({
     photo: 'assets/photos/m1a2sepv3-blur.jpg',
     photoSharp: 'assets/photos/m1a2sepv3.jpg',
     brief:
-      'SEPv3 是 SEP 系列目前最新的量产型。2017 年投产，首批 6 辆，同年 10 月 4 日交付。它加装了弹药数据链，可为 M829A4 与 AMP 多用途弹编程；新增装甲下的集成式柴油辅助动力单元，静默监视时不必启动燃气轮机；装甲与电子设备升级，车长武器站换成低矮型 CROWS。火力仍是 M256 120 mm 滑膛炮，配套弹药则随数据链更新。',
+      'SEPv3 是 SEP 系列目前最新的量产型。2017 年投产，同年 10 月 4 日陆军验收首批六辆中的第一辆。它加装了弹药数据链，可为 M829A4 与 AMP 多用途弹编程；新增装甲下的集成式柴油辅助动力单元，静默监视时不必启动燃气轮机；装甲与电子设备升级，车长武器站换成低矮型 CROWS。火力仍是 M256 120 mm 滑膛炮，配套弹药则随数据链更新。',
     delta: [
       '相对 SEPv2：弹药数据链，支持 M829A4 与 AMP。',
       '相对 SEPv2：装甲下柴油 APU，静默监视不启动燃气轮机。',
       '相对 SEPv2：装甲升级，低矮型 CROWS。',
     ],
     parts: a2Parts({
+      ammo: 'M829A4 / AMP（数据链编程）',
+      turretRows: [['结构', '复合装甲 + 装甲升级'], ['防护', '正面 > 940 mm KE（增重后更高）']],
+      suspRows: [['负重轮', '每侧 7 个'], ['减振', '与 SEPv2 同批改进']],
       turretHits: ['turret', ...SEP_PANEL],
     }),
   },

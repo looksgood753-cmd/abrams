@@ -57,6 +57,134 @@ const fmt = (n) => String(Math.round(n * 100) / 100);
 const pctX = (x) => ((x - STAGE.x) / STAGE.w) * 100;
 const pctY = (y) => ((y - STAGE.y) / STAGE.h) * 100;
 
+/* ------------------------------------------------------------------ 首次进入提示 */
+
+const HINT_TEXT = {
+  plaque: '点击此处切换到真实图片',
+  timeline: '点击不同的图片来切换型号',
+  part: '选部件查看详情',
+};
+
+let hintLayer = null;
+let hintReposition = null;
+
+function maybeShowHints(params) {
+  if (params.get('hint') === '0') return;
+  if (state.photoMode || state.startPhoto || state.startPart) return;
+  // 每次打开都出现，不记 localStorage
+  window.setTimeout(showHints, 700);
+}
+
+function showHints() {
+  if (hintLayer || state.photoMode) return;
+
+  const layer = h('div', 'hint-layer');
+  const draw = svg('svg', { class: 'hint-arrows', 'aria-hidden': 'true' });
+  const defs = svg('defs');
+  const marker = svg('marker', {
+    id: 'hint-arrow-head',
+    markerWidth: 7,
+    markerHeight: 7,
+    refX: 6,
+    refY: 3.5,
+    orient: 'auto',
+  });
+  marker.appendChild(svg('path', { d: 'M0 0 L7 3.5 L0 7 Z', fill: 'var(--c12)' }));
+  defs.appendChild(marker);
+  const markerDark = svg('marker', {
+    id: 'hint-arrow-head-dark',
+    markerWidth: 7,
+    markerHeight: 7,
+    refX: 6,
+    refY: 3.5,
+    orient: 'auto',
+  });
+  markerDark.appendChild(svg('path', { d: 'M0 0 L7 3.5 L0 7 Z', fill: 'var(--c1)' }));
+  defs.appendChild(markerDark);
+  draw.appendChild(defs);
+  layer.appendChild(draw);
+
+  const bubbles = {
+    plaque: h('div', 'hint-bubble', HINT_TEXT.plaque),
+    timeline: h('div', 'hint-bubble', HINT_TEXT.timeline),
+    part: h('div', 'hint-bubble hint-bubble--solid', HINT_TEXT.part),
+  };
+  for (const bubble of Object.values(bubbles)) layer.appendChild(bubble);
+
+  document.body.appendChild(layer);
+  hintLayer = layer;
+
+  const layout = () => positionHints(draw, bubbles);
+  layout();
+  hintReposition = layout;
+  window.addEventListener('resize', layout);
+  window.addEventListener('hashchange', layout);
+
+  window.requestAnimationFrame(() => layer.classList.add('is-visible'));
+  window.setTimeout(leaveHints, 3500);
+}
+
+function hintLine(draw, x1, y1, x2, y2, dark = false) {
+  draw.appendChild(
+    svg('path', {
+      class: dark ? 'hint-line hint-line--dark' : 'hint-line',
+      d: `M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}`,
+      'marker-end': dark ? 'url(#hint-arrow-head-dark)' : 'url(#hint-arrow-head)',
+    }),
+  );
+}
+
+function positionHints(draw, bubbles) {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  draw.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  for (const old of draw.querySelectorAll('.hint-line')) old.remove();
+
+  const plaque = dom.photoToggle.getBoundingClientRect();
+  const timeline = dom.timeline.getBoundingClientRect();
+  const plate = document.getElementById('stage-frame').getBoundingClientRect();
+
+  const plaqueBubble = bubbles.plaque;
+  plaqueBubble.style.left = `${Math.round(plaque.left + plaque.width / 2 - plaqueBubble.offsetWidth / 2)}px`;
+  plaqueBubble.style.top = `${Math.round(plaque.bottom + 26)}px`;
+  const pr = plaqueBubble.getBoundingClientRect();
+  hintLine(draw, pr.left + pr.width / 2, pr.top - 1, plaque.left + plaque.width / 2, plaque.bottom + 2);
+
+  const timelineBubble = bubbles.timeline;
+  timelineBubble.style.left = `${Math.round(timeline.left + timeline.width / 2 - timelineBubble.offsetWidth / 2)}px`;
+  timelineBubble.style.top = `${Math.round(timeline.top - timelineBubble.offsetHeight - 24)}px`;
+  const tr = timelineBubble.getBoundingClientRect();
+  hintLine(draw, tr.left + tr.width / 2, tr.bottom + 1, timeline.left + timeline.width / 2, timeline.top - 2);
+
+  const partBubble = bubbles.part;
+  const target = document.querySelector('.vehicle.is-shown .hotspot[data-part="gun"]');
+  if (!target) return;
+  const rect = target.getBoundingClientRect();
+  // 贴在炮管上方：那里是空的，气泡底边离炮管约 25px，箭头短且指向炮管
+  partBubble.style.left = '0px';
+  const bubbleW = partBubble.offsetWidth;
+  const cx = Math.round(rect.left + rect.width * 0.55);
+  const left = Math.max(plate.left + 10, Math.min(cx - bubbleW / 2, plate.right - bubbleW - 10));
+  const top = Math.max(plate.top + 8, Math.round(rect.top - 62));
+  partBubble.style.left = `${Math.round(left)}px`;
+  partBubble.style.top = `${top}px`;
+  const partRect = partBubble.getBoundingClientRect();
+  hintLine(draw, partRect.left + partRect.width / 2, partRect.bottom + 1, cx, rect.top + 2, true);
+}
+
+function leaveHints() {
+  if (!hintLayer) return;
+  hintLayer.classList.add('is-leaving');
+  if (hintReposition) {
+    window.removeEventListener('resize', hintReposition);
+    window.removeEventListener('hashchange', hintReposition);
+    hintReposition = null;
+  }
+  const layer = hintLayer;
+  hintLayer = null;
+  window.setTimeout(() => layer.remove(), 700);
+}
+
 /* ------------------------------------------------------------------ 启动 */
 
 boot().catch(fatal);
@@ -77,10 +205,14 @@ async function boot() {
   dom.brief = document.getElementById('brief-text');
   dom.delta = document.getElementById('delta-list');
   dom.timeline = document.getElementById('timeline');
+  dom.timelineWrap = document.getElementById('timeline-wrap');
+  dom.timelinePrev = document.getElementById('timeline-prev');
+  dom.timelineNext = document.getElementById('timeline-next');
   dom.track = document.getElementById('timeline-track');
   dom.debugBadge = document.getElementById('debug-badge');
   dom.backdrop = document.getElementById('backdrop');
   dom.backdropSharp = document.getElementById('backdrop-sharp');
+  dom.photoCaption = document.getElementById('photo-caption');
   dom.photoToggle = document.getElementById('photo-toggle');
 
   const params = readParams();
@@ -101,7 +233,6 @@ async function boot() {
   buildVehicles();
   buildParts();
   buildTimeline();
-  document.getElementById('route-list').textContent = ORDER.map((id) => `#/${id}`).join(' · ');
   buildBackdrop();
   buildDebug();
 
@@ -116,15 +247,29 @@ async function boot() {
   new ResizeObserver(onResize).observe(dom.wrap);
   dom.timeline.addEventListener('keydown', onTimelineKeydown);
   dom.timeline.addEventListener('click', onTimelineClick);
+  dom.timelinePrev.addEventListener('click', () => stepVariant(-1));
+  dom.timelineNext.addEventListener('click', () => stepVariant(1));
+  dom.timeline.addEventListener('scroll', updateTimelineEdges, { passive: true });
+  window.addEventListener('resize', onTimelineResize);
   dom.photoToggle.addEventListener('click', onPhotoToggle);
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && state.photoMode) setPhotoMode(false);
+  });
+
+  dom.overview = document.getElementById('overview');
+  document.getElementById('overview-close').addEventListener('click', () => {
+    dom.overview.open = false;
+  });
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && dom.overview && dom.overview.open) dom.overview.open = false;
   });
 
   dom.stage.addEventListener('pointermove', onPointerMove);
   dom.stage.addEventListener('pointerdown', onPointerMove);
   dom.stage.addEventListener('pointerleave', () => closeAll());
   dom.stage.addEventListener('pointercancel', () => closeAll());
+
+  maybeShowHints(params);
 
   window.__abrams = { STAGE, BAND, VARIANTS, ORDER, MARKS, built, route: () => state.current };
 }
@@ -462,12 +607,19 @@ function buildBackdrop() {
     blurred.dataset.variant = id;
     dom.backdrop.appendChild(blurred);
 
+    // 底衬：同一张模糊图铺满，补 contain 留出的边
+    const fill = h('div', 'backdrop-layer backdrop-layer--sharp-fill');
+    fill.dataset.variant = id;
+    fill.style.backgroundImage = `url("${v.photo}")`;
+    dom.backdropSharp.appendChild(fill);
+
     const sharp = h('div', 'backdrop-layer backdrop-layer--sharp');
     sharp.dataset.variant = id;
     dom.backdropSharp.appendChild(sharp);
 
     built.get(id).photoLayer = blurred;
     built.get(id).sharpLayer = sharp;
+    built.get(id).sharpFill = fill;
   }
 
   const initial = state.current || readRoute() || 'm1';
@@ -529,6 +681,7 @@ function applyBackdrop(id) {
     const active = key === id;
     if (entry.photoLayer) entry.photoLayer.classList.toggle('is-shown', active && !state.photoMode);
     if (entry.sharpLayer) entry.sharpLayer.classList.toggle('is-shown', active && state.photoMode);
+    if (entry.sharpFill) entry.sharpFill.classList.toggle('is-shown', active && state.photoMode);
   }
 }
 
@@ -537,6 +690,7 @@ function setPhotoMode(on) {
   document.body.classList.toggle('is-photo', on);
   dom.photoToggle.setAttribute('aria-pressed', String(on));
   applyBackdrop(state.current);
+  if (on) leaveHints();
 }
 
 function onPhotoToggle() {
@@ -636,7 +790,7 @@ function buildTimeline() {
     const meta = h('span', 'milestone-meta');
     meta.append(h('span', 'milestone-year', String(v.year)), h('span', 'milestone-name', v.name));
 
-    link.append(thumb, meta);
+    link.append(thumb, meta, h('span', 'milestone-badge', '当前'));
     li.appendChild(link);
     dom.track.appendChild(li);
   }
@@ -698,6 +852,7 @@ function renderRoute(initial) {
   dom.year.textContent = String(v.year);
   dom.name.textContent = v.name;
   dom.note.textContent = v.note;
+  dom.photoCaption.textContent = `${v.name} · ${v.year} · Esc 或点「实车照」返回`;
   dom.brief.textContent = v.brief;
   dom.delta.replaceChildren(...v.delta.map((text) => h('li', null, text)));
 
@@ -717,9 +872,37 @@ function renderRoute(initial) {
 
   applyLayers(id, instant);
   updateDebugActive(id);
+  updateTimelineUI();
   state.first = false;
 }
 
+
+function stepVariant(dir) {
+  const index = ORDER.indexOf(state.current);
+  const next = ORDER[index + dir];
+  if (!next) return;
+  location.hash = `#/${next}`;
+}
+
+function updateTimelineEdges() {
+  const box = dom.timeline;
+  const max = box.scrollWidth - box.clientWidth;
+  dom.timelineWrap.classList.toggle('at-start', box.scrollLeft <= 1);
+  dom.timelineWrap.classList.toggle('at-end', box.scrollLeft >= max - 1);
+}
+
+function onTimelineResize() {
+  const link = dom.timeline.querySelector('.milestone[aria-current="page"]');
+  if (link) scrollTimelineTo(link, true);
+  updateTimelineUI();
+}
+
+function updateTimelineUI() {
+  const index = ORDER.indexOf(state.current);
+  dom.timelinePrev.disabled = index <= 0;
+  dom.timelineNext.disabled = index >= ORDER.length - 1;
+  updateTimelineEdges();
+}
 
 function scrollTimelineTo(link, instant) {
   const track = dom.timeline;

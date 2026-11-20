@@ -88,6 +88,36 @@ body {
 
 .backdrop-layer--sharp {
   filter: none;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+/* contain 留出的边用同一张图模糊铺底 */
+.backdrop-layer--sharp-fill {
+  filter: blur(24px) brightness(0.45) saturate(0.8);
+}
+
+.photo-caption {
+  position: fixed;
+  left: 24px;
+  bottom: 22px;
+  z-index: 2;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--c13) 30%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c1) 74%, transparent);
+  color: var(--c13);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 420ms var(--ease), visibility 420ms;
+  pointer-events: none;
+}
+
+body.is-photo .photo-caption {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* 压一层暗角，保证左栏文字和白框边缘的对比度 */
@@ -127,6 +157,66 @@ body.dump pre {
   word-break: break-word;
   font: 13px/1.65 var(--font-mono);
   color: var(--c13);
+}
+
+/* ---------------------------------------------------------------- 首次进入提示 */
+
+.hint-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms var(--ease);
+}
+
+.hint-layer.is-visible { opacity: 1; }
+
+.hint-layer.is-leaving {
+  opacity: 0;
+  transition-duration: 600ms;
+}
+
+.hint-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: color-mix(in srgb, var(--c13) 62%, transparent);
+}
+
+.hint-line {
+  fill: none;
+  stroke: color-mix(in srgb, var(--c13) 62%, transparent);
+  stroke-width: 1.2;
+}
+
+/* 指向车体部件的那条：白底上用深色，不用磨砂 */
+.hint-line--dark { stroke: var(--c1); }
+
+.hint-bubble--solid {
+  background: var(--c1);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: color-mix(in srgb, var(--c13) 34%, transparent);
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+}
+
+.hint-bubble {
+  position: absolute;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--c13) 26%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c2) 46%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(0.9);
+  backdrop-filter: blur(14px) saturate(0.9);
+  color: var(--c13);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.65);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 
 /* ---------------------------------------------------------------- 纯照片模式 */
@@ -591,6 +681,76 @@ h1 {
 
 /* ---------------------------------------------------------------- 时间轴 */
 
+.timeline-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+
+/* 两端「上一型 / 下一型」 */
+.timeline-step {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 40px;
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--page) 84%, transparent);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 160ms var(--ease), border-color 160ms var(--ease), background-color 160ms var(--ease);
+}
+
+.timeline-step:hover:not(:disabled) {
+  color: var(--c13);
+  border-color: color-mix(in srgb, var(--c13) 42%, transparent);
+  background: color-mix(in srgb, var(--page) 60%, transparent);
+}
+
+.timeline-step:focus-visible {
+  outline: 2px solid var(--c13);
+  outline-offset: 2px;
+}
+
+.timeline-step:disabled {
+  opacity: 0.26;
+  cursor: default;
+}
+
+.timeline-step.prev { left: 4px; }
+.timeline-step.next { right: 4px; }
+
+/* 横向滚动到边缘时，另一侧的渐隐提示 */
+.timeline-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease);
+}
+
+.timeline-fade.left {
+  left: 0;
+  background: linear-gradient(to right, var(--page) 12%, transparent);
+}
+
+.timeline-fade.right {
+  right: 0;
+  background: linear-gradient(to left, var(--page) 12%, transparent);
+}
+
+.timeline-wrap.at-start .timeline-fade.left { opacity: 0; }
+.timeline-wrap.at-end .timeline-fade.right { opacity: 0; }
+
 .timeline {
   position: relative;
   z-index: 1;
@@ -600,7 +760,7 @@ h1 {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
-  padding: 12px 24px 10px;
+  padding: 12px 46px 10px;
 }
 
 .timeline::-webkit-scrollbar { height: 8px; }
@@ -625,6 +785,7 @@ h1 {
 }
 
 .milestone {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -641,6 +802,23 @@ h1 {
   background: color-mix(in srgb, var(--c13) 10%, transparent);
   border-color: color-mix(in srgb, var(--c13) 34%, transparent);
 }
+
+.milestone-badge {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 1;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--page) 82%, transparent);
+  color: var(--c11);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  visibility: hidden;
+}
+
+.milestone[aria-current="page"] .milestone-badge { visibility: visible; }
 
 .milestone[aria-current="page"] {
   background: color-mix(in srgb, var(--c13) 14%, transparent);
@@ -686,6 +864,219 @@ h1 {
 
 .milestone[aria-current="page"] .milestone-year { color: var(--c11); }
 
+/* ---------------------------------------------------------------- 七型一览 */
+
+.overview {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--hair);
+  font-size: 12px;
+}
+
+.overview > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 24px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--muted);
+  user-select: none;
+}
+
+.overview > summary::-webkit-details-marker { display: none; }
+
+.overview > summary:hover { color: var(--c13); }
+
+.overview-title {
+  color: var(--c13);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.overview-sub {
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.overview-chevron {
+  margin-left: auto;
+  color: var(--faint);
+  transition: transform 200ms var(--ease);
+}
+
+.overview[open] .overview-chevron { transform: rotate(180deg); }
+
+.overview-panel {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  max-height: 64vh;
+  padding: 12px 24px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--c13) 32%, transparent);
+  background: color-mix(in srgb, var(--page) 94%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 -18px 40px -22px rgba(0, 0, 0, 0.7);
+}
+
+.overview[open] .overview-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.overview-head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--c13);
+}
+
+.overview-close {
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  width: 26px;
+  height: 24px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.overview-close:hover {
+  color: var(--c13);
+  border-color: color-mix(in srgb, var(--c13) 40%, transparent);
+}
+
+.overview-scroll {
+  margin-top: 8px;
+  overflow: auto;
+  max-height: 50vh;
+}
+
+.overview table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.overview th,
+.overview td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--c13) 12%, transparent);
+}
+
+.overview th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--page);
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.overview td.year {
+  font-family: var(--font-mono);
+  color: var(--c11);
+  white-space: nowrap;
+}
+
+.overview tbody tr:hover td {
+  background: color-mix(in srgb, var(--c13) 5%, transparent);
+}
+
+.overview a {
+  color: var(--c12);
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in srgb, var(--c12) 45%, transparent);
+}
+
+.overview a:hover { color: var(--c13); }
+
+.overview-note {
+  margin: 10px 0 0;
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+/* ---------------------------------------------------------------- 表格提示光 */
+
+/* 每 15 秒轻闪两次（间隔 1 秒），柔白光包裹入口条与表头 */
+@keyframes overview-glow {
+  0%,
+  6% {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0), 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  10% {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), 0 0 30px rgba(255, 255, 255, 0.50);
+  }
+  16%,
+  17% {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0), 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  20% {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), 0 0 30px rgba(255, 255, 255, 0.50);
+  }
+  26%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0), 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+.overview th {
+  animation: overview-glow 10s linear infinite;
+}
+
+@keyframes overview-glow-soft {
+  0%,
+  6% { opacity: 0; }
+  10% { opacity: 1; }
+  16%,
+  17% { opacity: 0; }
+  20% { opacity: 1; }
+  26%,
+  100% { opacity: 0; }
+}
+
+.overview > summary {
+  position: relative;
+}
+
+.overview > summary::after {
+  content: '';
+  position: absolute;
+  inset: -10px -4px;
+  pointer-events: none;
+  background: radial-gradient(
+    92% 150% at 50% 50%,
+    rgba(255, 255, 255, 0.30),
+    rgba(255, 255, 255, 0) 72%
+  );
+  opacity: 0;
+  animation: overview-glow-soft 10s linear infinite;
+}
+
 /* ---------------------------------------------------------------- 页脚 */
 
 .colophon {
@@ -694,14 +1085,20 @@ h1 {
   flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 20px;
-  justify-content: space-between;
+  gap: 6px 12px;
+  justify-content: center;
+  align-items: baseline;
   max-width: var(--page-max);
   width: 100%;
   margin: 0 auto;
   padding: 0 24px 12px;
   font-size: 11px;
   color: var(--c9);
+}
+
+.colophon-sep {
+  color: var(--faint);
+  opacity: 0.7;
 }
 
 /* ---------------------------------------------------------------- 度量容器 */
@@ -802,6 +1199,9 @@ html:not([data-debug="1"]) #debug-layer { display: none; }
   .part-dot,
   .part-card,
   .milestone { transition: none !important; }
+
+  .overview > summary::after,
+  .overview th { animation: none !important; }
 }
 
 /* ---------------------------------------------------------------- 窄屏 */

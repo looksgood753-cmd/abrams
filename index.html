@@ -15,6 +15,7 @@
 
   <div class="backdrop" id="backdrop" aria-hidden="true"></div>
   <div class="backdrop backdrop--sharp" id="backdrop-sharp" aria-hidden="true"></div>
+  <div class="photo-caption" id="photo-caption" aria-hidden="true"></div>
 
   <main class="layout">
 
@@ -24,9 +25,9 @@
           <p class="eyebrow">ABRAMS · 侧视对照</p>
           <h1>艾布拉姆斯型号演进</h1>
         </div>
-        <button class="plaque" id="photo-toggle" type="button" aria-pressed="false" aria-label="切换实物背景图">
+        <button class="plaque" id="photo-toggle" type="button" aria-pressed="false" aria-label="切换实车照">
           <span class="plaque-led" aria-hidden="true"></span>
-          <span class="plaque-text">真实图片</span>
+          <span class="plaque-text">实车照</span>
         </button>
       </header>
 
@@ -67,15 +68,88 @@
 
   </main>
 
-  <nav class="timeline" id="timeline" aria-label="型号时间轴">
-    <ol class="timeline-track" id="timeline-track"></ol>
-  </nav>
+  <div class="timeline-wrap" id="timeline-wrap">
+    <button class="timeline-step prev" id="timeline-prev" type="button" aria-label="上一型">‹</button>
+    <nav class="timeline" id="timeline" aria-label="型号时间轴">
+      <ol class="timeline-track" id="timeline-track"></ol>
+    </nav>
+    <button class="timeline-step next" id="timeline-next" type="button" aria-label="下一型">›</button>
+    <span class="timeline-fade left" aria-hidden="true"></span>
+    <span class="timeline-fade right" aria-hidden="true"></span>
+  </div>
+
+  <details class="overview" id="overview">
+    <summary>
+      <span class="overview-title">七型一览</span>
+      <span class="overview-sub">型号 / 年份 / 里程碑 / 主要变化 / 来源</span>
+      <span class="overview-chevron" aria-hidden="true">▾</span>
+    </summary>
+    <div class="overview-panel" role="dialog" aria-label="七型一览">
+      <div class="overview-head">
+        <h2>七型一览</h2>
+        <button class="overview-close" id="overview-close" type="button" aria-label="关闭">×</button>
+      </div>
+      <div class="overview-scroll">
+        <table>
+          <thead>
+            <tr><th>型号</th><th>年份</th><th>里程碑</th><th>主要变化</th><th>来源</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>M1</td><td class="year">1980</td>
+              <td>首批生产型车交付（1980-02）</td>
+              <td>Burlington 复合装甲；AGT-1500 燃气轮机；M68A1 105 mm</td>
+              <td><a href="https://www.globalsecurity.org/military/systems/ground/m1.htm" target="_blank" rel="noreferrer">GlobalSecurity</a></td>
+            </tr>
+            <tr>
+              <td>IPM1</td><td class="year">1984</td>
+              <td>投产（1984-10）</td>
+              <td>Block I 炮塔装甲；悬挂加强；仍为 105 mm</td>
+              <td><a href="https://www.globalsecurity.org/military/systems/ground/m1.htm" target="_blank" rel="noreferrer">GlobalSecurity</a></td>
+            </tr>
+            <tr>
+              <td>M1A1</td><td class="year">1985</td>
+              <td>首辆生产型车出厂（1985-08）</td>
+              <td>M256 120 mm 滑膛炮；弹舱重排；集体三防</td>
+              <td><a href="https://www.globalsecurity.org/military/systems/ground/m1.htm" target="_blank" rel="noreferrer">GlobalSecurity</a></td>
+            </tr>
+            <tr>
+              <td>M1A2</td><td class="year">1992</td>
+              <td>62 辆 LRIP；年末首批交付</td>
+              <td>车长独立热像仪；车际信息系统；数字火控</td>
+              <td><a href="https://archive.org/details/DTIC_ADA377690" target="_blank" rel="noreferrer">DTIC 92-104</a></td>
+            </tr>
+            <tr>
+              <td>M1A2 SEP</td><td class="year">1999</td>
+              <td>投产；1999-09 首批交付</td>
+              <td>计算机核心换代；彩色平板显示；开放系统</td>
+              <td><a href="https://man.fas.org/dod-101/sys/land/wsh2012/22.pdf" target="_blank" rel="noreferrer">FAS 装备手册</a></td>
+            </tr>
+            <tr>
+              <td>M1A2 SEPv2</td><td class="year">2006</td>
+              <td>首批 72 辆改装合同（2006-12）</td>
+              <td>任务电子与传动改进；遥控武器站；TUSK / ARAT II</td>
+              <td><a href="https://www.dote.osd.mil/Portals/97/pub/reports/FY2023/army/2023abrams-m1a2.pdf" target="_blank" rel="noreferrer">DOT&amp;E</a></td>
+            </tr>
+            <tr>
+              <td>M1A2 SEPv3</td><td class="year">2017</td>
+              <td>首辆验收（2017-10-04）</td>
+              <td>弹药数据链（M829A4 / AMP）；装甲下 APU；低矮型 CROWS</td>
+              <td><a href="https://www.army.mil/article/194952/army_rolls_out_latest_version_of_iconic_abrams_main_battle_tank" target="_blank" rel="noreferrer">Army.mil</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="overview-note">
+        年份口径 = 投产 / 首车出厂年；装甲等效厚度取自公开评估，不是官方数据。
+      </p>
+    </div>
+  </details>
 
   <footer class="colophon">
     <span>悬停部件查看数据</span>
+    <span class="colophon-sep" aria-hidden="true">·</span>
     <span>← → Home End 切换型号</span>
-    <span id="route-list">#/m1 · #/ipm1 · #/m1a1</span>
-    <span>python -m http.server 打开（file:// 不支持 ES Modules）</span>
   </footer>
 
   <svg id="measure" class="measure-host" aria-hidden="true" focusable="false"></svg>
