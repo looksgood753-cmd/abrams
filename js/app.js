@@ -29,6 +29,8 @@ const state = {
   photoMode: false,
   startPart: null,
   startPhoto: false,
+  coverOpen: false,
+  pendingHints: null,
 };
 
 /** 每车一份构建结果 */
@@ -56,6 +58,172 @@ function h(tag, className, text) {
 const fmt = (n) => String(Math.round(n * 100) / 100);
 const pctX = (x) => ((x - STAGE.x) / STAGE.w) * 100;
 const pctY = (y) => ((y - STAGE.y) / STAGE.h) * 100;
+
+/* ------------------------------------------------------------------ 前置封面 */
+
+function setupCover() {
+  const cover = document.getElementById('cover');
+  if (!cover) return;
+  cover.hidden = false;
+  state.coverOpen = true;
+
+  document.getElementById('cover-enter').addEventListener('click', enterSite);
+  window.addEventListener('keydown', (event) => {
+    if (!state.coverOpen) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      enterSite();
+    }
+  });
+}
+
+/** 把 M1A2 素材克隆到封面，CSS 把填充改成描边，得到线稿 */
+function injectCoverArt() {
+  const host = document.getElementById('cover-art');
+  const source = VARIANTS.m1a2 && VARIANTS.m1a2.imported;
+  if (!host || !source) return;
+  const clone = source.cloneNode(true);
+  clone.removeAttribute('id');
+  // 机枪原素材把支架/横杆/枢轴都画成了小块，线稿里会显得扭曲；封面只留外轮廓
+  // 原素材的机枪是逐块描出来的，线稿里会拧成一团；封面整组换成一段干净的车装 12.7 mm
+  const mg = ['mg_post', 'mg_diagonal', 'mg_crossbar', 'mg_cradle', 'mg_receiver', 'mg_barrel', 'mg_pivot-outer', 'mg_pivot-center', 'mg-receiver-edge'];
+  for (const el of clone.querySelectorAll('[id]')) {
+    const short = el.id.slice(el.id.lastIndexOf('--') + 2);
+    if (mg.includes(short)) {
+      el.remove();
+      continue;
+    }
+    el.removeAttribute('id');
+  }
+  host.appendChild(clone);
+  host.appendChild(coverMg());
+  drawCoverLines(host);
+  drawCoverTitle();
+  layoutCoverGrid();
+}
+
+/** 封面背景的工程标注：按实际版面元素定位，随窗口重算 */
+function layoutCoverGrid() {
+  const host = document.getElementById('cover-grid');
+  if (!host || !state.coverOpen) return;
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  host.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  host.replaceChildren();
+
+  const title = document.querySelector('.cover-title').getBoundingClientRect();
+  const art = document.getElementById('cover-art').getBoundingClientRect();
+  const foot = document.querySelector('.cover-foot').getBoundingClientRect();
+
+  const group = (cls) => {
+    const el = svg('g', { class: cls });
+    host.appendChild(el);
+    return el;
+  };
+  const line = (parent, d) => parent.appendChild(svg('path', { d }));
+
+  // 四角 L 形定位角标
+  const marks = group('cover-grid-marks');
+  const m = 18;
+  const arm = 18;
+  for (const [x, y, dx, dy] of [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]]) {
+    line(marks, `M${x} ${y + dy * arm} V${y} H${x + dx * arm}`);
+  }
+
+  // 横向尺寸线：标题正下方，两端带短刻度
+  const lines = group('cover-grid-lines');
+  const hy = Math.round(title.bottom + 20);
+  const hx1 = Math.round(title.left);
+  const hx2 = Math.round(title.left + title.width);
+  line(lines, `M${hx1} ${hy} H${hx2}`);
+  line(lines, `M${hx1} ${hy - 5} V${hy + 5}`);
+  line(lines, `M${hx2} ${hy - 5} V${hy + 5}`);
+
+  // 纵向尺寸线：右侧留白，跨线稿高度
+  const vx = Math.round(W - 36);
+  const vy1 = Math.round(art.top + 12);
+  const vy2 = Math.round(art.bottom - 12);
+  line(lines, `M${vx} ${vy1} V${vy2}`);
+  line(lines, `M${vx - 5} ${vy1} H${vx + 5}`);
+  line(lines, `M${vx - 5} ${vy2} H${vx + 5}`);
+
+  // 15° 参考线一：标题与线稿之间的留白
+  const t1x = Math.round(art.left + art.width * 0.5);
+  const t1y = Math.round(art.top + 64);
+  const t1len = Math.round(art.width * 0.33);
+  line(lines, `M${t1x} ${t1y} L${t1x + t1len} ${Math.round(t1y - t1len * 0.268)}`);
+
+  // 15° 参考线二：底部说明与按钮之间的留白
+  const t2x = Math.round(W * 0.28);
+  const t2y = Math.round(H - 18);
+  // 不越过页脚那条细线
+  const t2max = Math.max(120, Math.round((t2y - foot.top - 8) / 0.268));
+  const t2len = Math.min(Math.round(W * 0.26), t2max);
+  line(lines, `M${t2x} ${t2y} L${t2x + t2len} ${Math.round(t2y - t2len * 0.268)}`);
+}
+
+/** 标题用同一条"从左往右"的节奏擦出来：0.9 秒，正好是坦克画到一半的时间点 */
+function drawCoverTitle() {
+  if (state.reduced) return;
+  const head = document.querySelector('.cover-head');
+  if (!head) return;
+  head.classList.add('is-drawing');
+}
+
+/** 一次性自绘：按路径的横向位置错开，从左往右画出来 */
+function drawCoverLines(host) {
+  if (state.reduced) return;
+  const shapes = host.querySelectorAll('path, circle');
+  for (const el of shapes) {
+    let length = 0;
+    try {
+      length = el.getTotalLength();
+    } catch (error) {
+      continue;
+    }
+    if (!length) continue;
+    const box = el.getBBox();
+    const delay = Math.min(0.9, Math.max(0, (box.x / 1627) * 0.9));
+    el.style.strokeDasharray = `${length}`;
+    el.style.strokeDashoffset = `${length}`;
+    el.style.animation = `cover-draw 0.9s var(--ease) ${delay.toFixed(2)}s both`;
+  }
+  host.addEventListener('animationend', (event) => {
+    const el = event.target;
+    if (!(el instanceof SVGGeometryElement)) return;
+    el.style.strokeDasharray = '';
+    el.style.strokeDashoffset = '';
+    el.style.animation = '';
+  });
+}
+
+/** 封面用的干净机枪线稿（M2 侧视：弹药箱、立柱、机匣、枪管） */
+function coverMg() {
+  const group = svg('g', { class: 'cover-mg' });
+  const line = (d) => group.appendChild(svg('path', { d }));
+  line('M746 92 h42 v30 h-42 z');      // 弹药箱
+  line('M750 92 v-5 h34 v5');
+  line('M812 122 v-24 h22 v24');        // 立柱
+  line('M786 60 h78 l10 8 v20 h-88 z');  // 机匣（前端带斜切）
+  line('M786 74 h82');
+  line('M874 66 h120 v7 h-120 z');      // 枪管
+  line('M990 62 h13 v15 h-13 z');       // 枪口
+  line('M790 60 q10 -9 22 0');          // 提把
+  return group;
+}
+
+function enterSite() {
+  if (!state.coverOpen) return;
+  state.coverOpen = false;
+  const cover = document.getElementById('cover');
+  if (cover) {
+    cover.classList.add('is-leaving');
+    window.setTimeout(() => cover.remove(), 650);
+  }
+  const pending = state.pendingHints;
+  state.pendingHints = null;
+  if (pending) maybeShowHints(pending);
+}
 
 /* ------------------------------------------------------------------ 首次进入提示 */
 
@@ -228,7 +396,11 @@ async function boot() {
     state.reduced = e.matches;
   });
 
+  if (params.get('intro') !== '0') setupCover();
+
   await loadAllArt(VARIANTS, { defsHost: dom.defs, measureHost: dom.measure });
+
+  injectCoverArt();
 
   buildVehicles();
   buildParts();
@@ -251,6 +423,13 @@ async function boot() {
   dom.timelineNext.addEventListener('click', () => stepVariant(1));
   dom.timeline.addEventListener('scroll', updateTimelineEdges, { passive: true });
   window.addEventListener('resize', onTimelineResize);
+  window.addEventListener('resize', () => {
+    layoutCoverGrid();
+    for (const id of ORDER) {
+      const entry = built.get(id);
+      if (entry && entry.sharpLayer) updateSharpFit(entry.sharpLayer);
+    }
+  });
   dom.photoToggle.addEventListener('click', onPhotoToggle);
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && state.photoMode) setPhotoMode(false);
@@ -269,7 +448,8 @@ async function boot() {
   dom.stage.addEventListener('pointerleave', () => closeAll());
   dom.stage.addEventListener('pointercancel', () => closeAll());
 
-  maybeShowHints(params);
+  if (state.coverOpen) state.pendingHints = params;
+  else maybeShowHints(params);
 
   window.__abrams = { STAGE, BAND, VARIANTS, ORDER, MARKS, built, route: () => state.current };
 }
@@ -664,12 +844,24 @@ function ensureSharp(id) {
   img.onload = () => {
     layer.style.backgroundImage = `url("${v.photoSharp}")`;
     layer.dataset.state = 'ready';
+    layer.dataset.natW = String(img.naturalWidth);
+    layer.dataset.natH = String(img.naturalHeight);
+    updateSharpFit(layer);
     if (state.current === id && state.photoMode) layer.classList.add('is-shown');
   };
   img.onerror = () => {
     layer.dataset.state = 'error';
   };
   img.src = v.photoSharp;
+}
+
+/** 原图比屏幕小就按 1:1 显示，不放大——放大只会更糊 */
+function updateSharpFit(layer) {
+  const w = Number(layer.dataset.natW);
+  const h = Number(layer.dataset.natH);
+  if (!w || !h) return;
+  layer.style.backgroundSize =
+    w <= window.innerWidth && h <= window.innerHeight ? 'auto' : 'contain';
 }
 
 function applyBackdrop(id) {
@@ -690,7 +882,10 @@ function setPhotoMode(on) {
   document.body.classList.toggle('is-photo', on);
   dom.photoToggle.setAttribute('aria-pressed', String(on));
   applyBackdrop(state.current);
-  if (on) leaveHints();
+  if (on) {
+    leaveHints();
+    if (dom.overview) dom.overview.open = false;
+  }
 }
 
 function onPhotoToggle() {
