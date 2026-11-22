@@ -78,17 +78,18 @@ function setupCover() {
 }
 
 /** 把 M1A2 素材克隆到封面，CSS 把填充改成描边，得到线稿 */
-function injectCoverArt() {
+function injectCoverArt(source) {
   const host = document.getElementById('cover-art');
-  const source = VARIANTS.m1a2 && VARIANTS.m1a2.imported;
-  if (!host || !source) return;
+  if (!host || !source || state.coverInjected) return;
+  state.coverInjected = true;
   const clone = source.cloneNode(true);
   clone.removeAttribute('id');
   // 机枪原素材把支架/横杆/枢轴都画成了小块，线稿里会显得扭曲；封面只留外轮廓
   // 原素材的机枪是逐块描出来的，线稿里会拧成一团；封面整组换成一段干净的车装 12.7 mm
   const mg = ['mg_post', 'mg_diagonal', 'mg_crossbar', 'mg_cradle', 'mg_receiver', 'mg_barrel', 'mg_pivot-outer', 'mg_pivot-center', 'mg-receiver-edge'];
   for (const el of clone.querySelectorAll('[id]')) {
-    const short = el.id.slice(el.id.lastIndexOf('--') + 2);
+    const raw = el.id;
+    const short = raw.includes('--') ? raw.slice(raw.lastIndexOf('--') + 2) : raw;
     if (mg.includes(short)) {
       el.remove();
       continue;
@@ -100,6 +101,19 @@ function injectCoverArt() {
   drawCoverLines(host);
   drawCoverTitle();
   layoutCoverGrid();
+}
+
+/** 单独拉 M1A2 素材给封面用，不经过 loadAllArt 的串行队列 */
+async function fetchCoverArt() {
+  try {
+    const res = await fetch(VARIANTS.m1a2.file);
+    if (!res.ok) return null;
+    const doc = new DOMParser().parseFromString(await res.text(), 'image/svg+xml');
+    const g = doc.querySelector('svg > g');
+    return g ? document.importNode(g, true) : null;
+  } catch (error) {
+    return null;
+  }
 }
 
 /** 封面背景的工程标注：按实际版面元素定位，随窗口重算 */
@@ -398,9 +412,17 @@ async function boot() {
 
   if (params.get('intro') !== '0') setupCover();
 
+  // 封面只用 M1A2 一份素材：先单独拉它，到货就开始画，不等其余六份
+  let coverArtPromise = null;
+  if (state.coverOpen) {
+    coverArtPromise = fetchCoverArt().then((node) => {
+      if (node) injectCoverArt(node);
+    });
+  }
+
   await loadAllArt(VARIANTS, { defsHost: dom.defs, measureHost: dom.measure });
 
-  injectCoverArt();
+  if (state.coverOpen && !state.coverInjected) injectCoverArt(VARIANTS.m1a2.imported);
 
   buildVehicles();
   buildParts();
